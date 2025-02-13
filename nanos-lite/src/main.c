@@ -7,6 +7,14 @@ void init_irq(void);
 void init_fs(void);
 void init_proc(void);
 
+#define NAME(key) \
+  [AM_KEY_##key] = #key,
+
+static const char *keyname[256] __attribute__((used)) = {
+  [AM_KEY_NONE] = "NONE",
+  AM_KEYS(NAME)
+};
+
 int main() {
   extern const char logo[];
   printf("%s", logo);
@@ -18,6 +26,7 @@ int main() {
   init_device();
 
   init_ramdisk();
+
 
 #ifdef HAS_CTE
   init_irq();

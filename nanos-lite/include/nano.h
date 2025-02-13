@@ -21,8 +21,9 @@ enum
     FD_STDIN,
     FD_STDOUT,
     FD_STDERR,
-    FD_EVENT,
+    FD_DISPINFO,
     FD_FB,
+    FD_EVENT,
 };
 
 int fs_open(const char *pathname, int flags, int mode);
@@ -34,6 +35,8 @@ int fs_close(int fd);
 // device.c
 size_t serial_write(const void *buf, size_t offset, size_t len);
 size_t events_read(void *buf, size_t offset, size_t len);
+size_t dispinfo_read(void *buf, size_t offset, size_t len);
+size_t fb_write(const void *buf, size_t offset, size_t len);
 
 // syscall.c
 typedef long time_t;

@@ -23,17 +23,25 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
 }
 
 size_t events_read(void *buf, size_t offset, size_t len) {
-  AM_INPUT_KEYBRD_T event = io_read(AM_INPUT_KEYBRD);
-  if (event.keycode == AM_KEY_NONE) return 0;
+  AM_INPUT_KEYBRD_T event;
+  ioe_read(AM_INPUT_KEYBRD, &event);
+  int ret = 0;
+  if (event.keycode == AM_KEY_NONE) {
+    *(char*)buf = '\0';
+  } else {
+    ret = sprintf(buf, "%s %s\n\0", event.keydown ? "kd" : "ku", keyname[event.keycode]);
+  }
   
-  const char *down = (event.keydown ? "kd " : "ku ");
-  int ret = sprintf(buf, "%s%s\n", down, keyname[event.keycode]);
-  printf("%s\n", buf);
   return ret;
 }
 
 size_t dispinfo_read(void *buf, size_t offset, size_t len) {
-  return 0;
+  int width = io_read(AM_GPU_CONFIG).width;
+  int height = io_read(AM_GPU_CONFIG).height;
+
+  int ret = snprintf(buf, len, "%d %d\n", width, height);
+  
+  return ret;
 }
 
 size_t fb_write(const void *buf, size_t offset, size_t len) {

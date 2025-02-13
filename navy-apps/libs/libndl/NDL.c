@@ -25,31 +25,32 @@ uint32_t NDL_GetTicks() {
 }
 
 int NDL_PollEvent(char *buf, int len) {
-  if (fd == -1) return 0;
-  
-  int ret = read(fd, buf, len);
-  
-  return ret > 0 ? 1 : 0;
+  return read(fd, buf, len);
 }
 
 void NDL_OpenCanvas(int *w, int *h) {
-  if (getenv("NWM_APP")) {
-    int fbctl = 4;
-    fbdev = 5;
-    screen_w = *w; screen_h = *h;
     char buf[64];
-    int len = sprintf(buf, "%d %d", screen_w, screen_h);
-    // let NWM resize the window and create the frame buffer
-    write(fbctl, buf, len);
-    while (1) {
-      // 3 = evtdev
-      int nread = read(3, buf, sizeof(buf) - 1);
-      if (nread <= 0) continue;
-      buf[nread] = '\0';
-      if (strcmp(buf, "mmap ok") == 0) break;
+    int fd = open("/proc/dispinfo", 0, 0);
+    if (fd < 0) {
+        perror("Failed to open /proc/dispinfo");
+        return;
     }
-    close(fbctl);
-  }
+
+    // 读取屏幕信息
+    int nread = read(fd, buf, sizeof(buf) - 1);
+    close(fd);
+    
+    if (nread > 0) {
+        buf[nread] = '\0'; // 确保字符串结束
+        sscanf(buf, "%d %d", &screen_w, &screen_h); // 解析宽度和高度
+        printf("Screen size: %d x %d\n", screen_w, screen_h); // 输出屏幕大小
+    } else {
+        printf("Failed to read screen size\n");
+    }
+
+    // 记录画布的大小
+    *w = screen_w;
+    *h = screen_h;
 }
 
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
