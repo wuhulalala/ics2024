@@ -83,6 +83,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
   }
 
   pcb->max_brk = max_end;
+  fs_close(fd);
   return elf.e_entry;
 }
 

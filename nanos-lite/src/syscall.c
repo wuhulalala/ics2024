@@ -8,7 +8,7 @@
 
 typedef uint32_t (*sys_handler)(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
 
-
+static uint32_t sys_execve(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
 
 static Finfo file_names[] __attribute__((unused)) = {
   [0]  = {"stdin", 0, 0, 0, NULL, NULL},
@@ -48,7 +48,8 @@ static uint32_t sys_yield(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3) {
 }
 
 static uint32_t sys_exit(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3) {
-  halt(arg1);
+  char * filename = "/bin/nterm";
+  sys_execve((uintptr_t)filename, 0, 0);
   return 0;
 
 }
@@ -127,6 +128,16 @@ static uint32_t sys_signal(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3) {
 }
 
 static uint32_t sys_execve(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3) {
+    const char* filename = (const char*)arg1;
+    bool find = false;
+    for (int i = 0; i < sizeof(file_names) / sizeof(Finfo); i++) {
+      if (strcmp(filename, file_names[i].name) == 0) {
+        find = true;
+        break;
+      }
+    }
+    if (!find) return -1;
+    naive_uload(current, filename);
     return 0;
 }
 

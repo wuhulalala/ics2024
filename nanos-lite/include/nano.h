@@ -1,3 +1,4 @@
+#include <proc.h>
 // ramdisk.h
 size_t ramdisk_read(void *buf, size_t offset, size_t len);
 size_t ramdisk_write(const void *buf, size_t offset, size_t len);
@@ -45,3 +46,7 @@ typedef struct {
     time_t tv_sec;       /* seconds */
     suseconds_t tv_usec; /* microseconds */
 }timeval;
+
+
+// loader.c
+void naive_uload(PCB *pcb, const char *filename);

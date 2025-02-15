@@ -4,7 +4,7 @@
 
 static const char *font_fname = "/share/fonts/Courier-7.bdf";
 static BDF_Font *font = NULL;
-static SDL_Surface *screen = NULL;
+SDL_Surface *screen = NULL;
 Terminal *term = NULL;
 
 void builtin_sh_run();
