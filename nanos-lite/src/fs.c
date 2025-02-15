@@ -17,27 +17,27 @@ static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, 0, invalid_read, invalid_write},
   [FD_STDOUT] = {"stdout", 0, 0, 0, invalid_read, serial_write},
   [FD_STDERR] = {"stderr", 0, 0, 0, invalid_read, serial_write},
-  [FD_DISPINFO] = {"/proc/dispinfo", 0, 0, 0, dispinfo_read, invalid_write},
-  [FD_FB] = {"/dev/fb", 0, 0, 0, invalid_read, invalid_write},
+  [FD_DISPINFO] = {"/proc/dispinfo", 23, 0, 0, dispinfo_read, invalid_write},
+  [FD_FB] = {"/dev/fb", 0, 0, 0, invalid_read, fb_write},
   [FD_EVENT] = {"/dev/events", 0, 0, 0, events_read, invalid_write},
 #include "files.h"
 };
 
 void init_fs() {
-  // TODO: initialize the size of /dev/fb
+  AM_GPU_CONFIG_T config = io_read(AM_GPU_CONFIG);
+  file_table[FD_FB].size = config.width * config.height * sizeof(uint32_t);
+
   for (int i = FD_EVENT + 1; i < sizeof(file_table) / sizeof(Finfo); i++) {
     file_table[i].open_offset = 0;
     file_table[i].read = ramdisk_read;
     file_table[i].write = ramdisk_write;
   }
-
 }
 
 int fs_open(const char *pathname, int flags, int mode) {
   for (int i = 0; i < sizeof(file_table) / sizeof(Finfo); i++) {
     if (strcmp(pathname, file_table[i].name) == 0) {
-      //printf("%s\n", pathname);
-      //printf("%u\n", file_table[i].size);
+      //printf("name: %s, fd: %d\n", pathname, i);
       file_table[i].open_offset = 0;
       return i;
     }
@@ -46,7 +46,13 @@ int fs_open(const char *pathname, int flags, int mode) {
 }
 size_t fs_read(int fd, void *buf, size_t len) {
   assert(fd < sizeof(file_table) / sizeof(Finfo));
-  size_t rt = file_table[fd].read(buf, file_table[fd].open_offset + file_table[fd].disk_offset, len);
+  size_t real_len = len;
+  size_t size = file_table[fd].size;
+  size_t open_offset = file_table[fd].open_offset;
+  if (open_offset + len > size) {
+    real_len = size - open_offset;
+  }
+  size_t rt = file_table[fd].read(buf, open_offset + file_table[fd].disk_offset, real_len);
   file_table[fd].open_offset += rt;
   return rt;
 

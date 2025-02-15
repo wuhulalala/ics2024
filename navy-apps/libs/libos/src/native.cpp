@@ -255,7 +255,6 @@ struct Init {
     char *navyhome = getenv("NAVY_HOME");
     assert(navyhome);
     sprintf(fsimg_path, "%s/fsimg", navyhome);
-
     char newpath[512];
     get_fsimg_path(newpath, "/bin");
     setenv("PATH", newpath, 1); // overwrite the current PATH

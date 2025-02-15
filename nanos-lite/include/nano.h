@@ -18,7 +18,7 @@ typedef struct
 
 enum
 {
-    FD_STDIN,
+    FD_STDIN = 0,
     FD_STDOUT,
     FD_STDERR,
     FD_DISPINFO,

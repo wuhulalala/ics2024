@@ -25,7 +25,11 @@ void init_proc() {
   Log("Initializing processes...");
 
   // load program here
-  naive_uload(current, "/bin/event-test");
+  //naive_uload(current, "/bin/pal");
+  naive_uload(current, "/bin/nterm");
+  //naive_uload(current, "/bin/menu");
+  //naive_uload(current, "/bin/nslider");
+  //naive_uload(current, "/bin/bmp-test");
 }
 
 Context* schedule(Context *prev) {

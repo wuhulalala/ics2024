@@ -5,14 +5,135 @@
 #include <stdlib.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
-  assert(dst && src);
-  assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+    assert(src != NULL);
+    assert(dst != NULL);
+
+    SDL_Rect default_srcrect = {0, 0, src->w, src->h}; 
+    SDL_Rect default_dstrect = {0, 0, dst->w, dst->h}; 
+
+    if (srcrect == NULL) {
+        srcrect = &default_srcrect; 
+    }
+
+    if (dstrect == NULL) {
+        dstrect = &default_dstrect; 
+    }
+
+    if ((srcrect->x < 0) || (srcrect->y < 0) || 
+        (srcrect->x + srcrect->w > src->w) || 
+        (srcrect->y + srcrect->h > src->h) || 
+        (dstrect->x < 0) || (dstrect->y < 0) || 
+        (dstrect->x + dstrect->w > dst->w) || 
+        (dstrect->y + dstrect->h > dst->h)) {
+      return;
+    }
+    int src_pitch = src->pitch; 
+    int dst_pitch = dst->pitch;
+
+    uint8_t *src_pixels = (uint8_t *)src->pixels + srcrect->y * src_pitch + srcrect->x * (src->format->BytesPerPixel);
+    uint8_t *dst_pixels = (uint8_t *)dst->pixels + dstrect->y * dst_pitch + dstrect->x * (dst->format->BytesPerPixel);
+
+    for (int h = 0; h < srcrect->h; h++) {
+        memcpy(dst_pixels, src_pixels, srcrect->w * (src->format->BytesPerPixel));
+        src_pixels += src_pitch; 
+        dst_pixels += dst_pitch; 
+    }
+
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+    assert(dst != NULL);  
+    printf("Current function: %s, Current line: %d\n", __func__, __LINE__);
+    int x = 0;
+    int y = 0;
+    int w = dst->w;
+    int h = dst->h;
+
+    if (dstrect != NULL) {
+        x = dstrect->x;
+        y = dstrect->y;
+        w = dstrect->w;
+        h = dstrect->h;
+
+        if (x < 0 || y < 0 || x + w > dst->w || y + h > dst->h) {
+            return; 
+        }
+    }
+
+    int bytes_per_pixel = dst->format->BytesPerPixel;
+    int pitch = dst->pitch; 
+    uint8_t *pixels = (uint8_t *)dst->pixels;
+    
+    if (dst->format->palette != NULL) {
+        uint8_t index = 0;
+        SDL_Palette *palette = dst->format->palette;
+        
+        for (int i = 0; i < palette->ncolors; i++) {
+            if (palette->colors[i].val == color) {
+                index = i;
+                break;
+            }
+        }
+
+        for (int row = y; row < y + h; row++) {
+            for (int col = x; col < x + w; col++) {
+                int offset = row * pitch + col;
+                pixels[offset] = index;
+            }
+        }
+    } else {
+        for (int row = y; row < y + h; row++) {
+            for (int col = x; col < x + w; col++) {
+                int offset = row * pitch + col * bytes_per_pixel;
+                
+                if (bytes_per_pixel == 4) {
+                    *((uint32_t *)(pixels + offset)) = color;
+                }
+                else if (bytes_per_pixel == 2) {
+                    *((uint16_t *)(pixels + offset)) = (uint16_t)color;
+                }
+                else if (bytes_per_pixel == 1) {
+                    pixels[offset] = (uint8_t)color;
+                }
+            }
+        }
+    }
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+    if (s == NULL || s->pixels == NULL) {
+        return; 
+    }
+    if (x == 0 && y == 0 && w == 0 && h == 0) {
+      x = 0;
+      y = 0;
+      w = s->w;
+      h = s->h;
+    }
+
+    uint8_t *pixels = s->pixels; 
+    SDL_Palette *palette = s->format->palette; 
+
+    if (palette == NULL) {
+        NDL_DrawRect(pixels, x, y, w, h);
+    } else {
+        uint32_t *colors = (uint32_t *)malloc(w * h * sizeof(uint32_t)); 
+        if (colors == NULL) {
+            return; 
+        }
+
+        for (int j = 0; j < h; j++) {
+          for (int i = 0; i < w; i++) {
+            uint8_t index = pixels[(y + j) * s->w + (x + i)];
+            SDL_Color color = palette->colors[index]; 
+            colors[j * w + i] = color.a << 24 | color.r << 16 | color.g << 8 | color.b;
+          }
+        }
+
+        NDL_DrawRect(colors, x, y, w, h);
+
+        free(colors); 
+    }
 }
 
 // APIs below are already implemented.

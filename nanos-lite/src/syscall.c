@@ -14,6 +14,9 @@ static Finfo file_names[] __attribute__((unused)) = {
   [0]  = {"stdin", 0, 0, 0, NULL, NULL},
   [1] = {"stdout", 0, 0, 0, NULL, NULL},
   [2] = {"stderr", 0, 0, 0, NULL, NULL},
+  [3] = {"/proc/dispinfo", 0, 0, 0, NULL, NULL},
+  [4] = {"/dev/fb", 0, 0, 0, NULL, NULL},
+  [5] = {"/dev/events", 0, 0, 0, NULL, NULL},
 #include "files.h"
 };
 
